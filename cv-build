@@ -1,0 +1,15 @@
+#!/bin/sh
+# One-command macOS/Linux launcher. First run installs dependencies in a local venv.
+set -eu
+DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+PYTHON="$DIR/.venv/bin/python"
+if [ ! -x "$PYTHON" ]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Python 3 is required. Install it and run again." >&2
+    exit 1
+  fi
+  echo "First run: setting up the CV builder in $DIR/.venv..." >&2
+  python3 -m venv "$DIR/.venv"
+  "$DIR/.venv/bin/python" -m pip install -r "$DIR/requirements.txt"
+fi
+exec "$PYTHON" "$DIR/build.py" "$@"

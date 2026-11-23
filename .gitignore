@@ -1,0 +1,9 @@
+# Python virtual environment — machine-specific, recreated automatically by ./cv-build
+.venv/
+# temporary HTML from builds
+.cv-build/
+# generated output — rebuild from cv.md
+*.pdf
+*.html
+# macOS clutter
+.DS_Store

@@ -1,0 +1,77 @@
+/* Two-column original styling, with Karla (variable font, weights 200–800) and modest readability improvements. */
+/* CV template — FlowCV-like two-column layout. Tweak the variables first. */
+@font-face { font-family: "Karla"; src: url("fonts/Karla.ttf") format("truetype"); font-weight: 200 800; font-style: normal; }
+@font-face { font-family: "Karla"; src: url("fonts/Karla-Italic.ttf") format("truetype"); font-weight: 200 800; font-style: italic; }
+
+:root {
+  --blue: #2c3696;
+  --accent: #2c3696;      /* navy name on white sidebar */
+  --on-blue: #ffffff;
+  --side-w: 36%;          /* sidebar width */
+  --pad-y: 26pt;          /* top/bottom padding on every page */
+  --pad-x: 28pt;          /* outer left/right padding */
+  --gutter: 23pt;         /* inner padding of each column */
+  --fs: 9.85pt;            /* body font size */
+  --lh: 1.38;
+}
+
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Karla", sans-serif; font-size: var(--fs); line-height: var(--lh);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+/* blue right panel repeated on every page */
+.panel { position: fixed; top: 0; bottom: 0; right: 0; width: calc(100% - var(--side-w)); background: var(--blue); z-index: -1; }
+
+.page { display: grid; grid-template-columns: var(--side-w) 1fr; align-items: start; }
+.side, .main {
+  padding-top: var(--pad-y); padding-bottom: var(--pad-y);
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+.side { padding-left: var(--pad-x); padding-right: var(--gutter); color: var(--blue); }
+.main { padding-left: var(--gutter); padding-right: var(--pad-x); color: var(--on-blue); }
+
+p { margin: 0 0 7pt; }
+strong { font-weight: 700; }
+a { color: inherit; text-decoration: none; }
+ul { margin: 0 0 7pt; padding-left: 11pt; }
+li { break-inside: avoid; }
+li::marker { font-size: 0.8em; }
+
+/* header */
+.name { color: var(--accent); font-size: 16pt; font-weight: 700; line-height: 1.2; margin: 0 0 4pt; }
+.title { font-size: 11.5pt; line-height: 1.3; margin: 0 0 12pt; }
+.photo { width: 120pt; height: 120pt; border-radius: 50%; object-fit: cover; object-position: 50% 30%; display: block; margin: 0 0 14pt; }
+.contact { list-style: none; padding: 0; margin: 0 0 18pt; }
+.contact li { display: flex; align-items: center; gap: 8pt; margin-bottom: 5pt; }
+.contact svg { width: 14pt; height: 14pt; flex: none; }
+
+/* section headings */
+h2 {
+  display: block; width: fit-content; font-size: 12.5pt; font-weight: 700; letter-spacing: 0.06em; line-height: 1.2;
+  margin: 8pt 0 10pt; padding: 0 3pt 4pt 0; border-bottom: 2.5pt solid currentColor; break-after: avoid;
+}
+.side h2:first-child { margin-top: 0; }
+
+/* sidebar entries */
+.side ul li { margin-bottom: 5pt; }
+.side p { margin-bottom: 10pt; }
+.side > p:last-child { margin-bottom: 0; }
+
+/* main column */
+.main h2 { margin-top: 12pt; }
+.main h3, .main h4 { font-size: var(--fs); font-weight: 700; margin: 0; break-after: avoid; }
+.main h3 { margin-top: 12pt; }
+.main h2 + h3 { margin-top: 0; }
+.main ul { margin-bottom: 7pt; }
+.main p:has(+ ul) { margin-bottom: 0; }
+.main p:has(> strong:only-child) { break-after: avoid; }
+
+
+/* put <div class="break"></div> on its own line in the .md to force a new page in that column */
+.break { break-before: page; }
+hr { border: 0; border-top: 0.75pt solid currentColor; opacity: .5; margin: 12pt 0; }
+.contact span { word-break: break-word; }
