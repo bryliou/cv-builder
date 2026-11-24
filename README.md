@@ -29,6 +29,7 @@ A small local app that converts your editable Markdown CV into **searchable PDFs
 | `./cv-build cv.md --html` | PDF + HTML preview |
 | `./cv-build cv.md --html-only` | HTML preview without Chrome |
 | `./cv-build cv.md --engine weasyprint` | Use the optional WeasyPrint renderer |
+| `./cv-build note.md --letter --header-from cv.md` | `note.pdf` — cover letter with the CV's Arial header and today's date (`--date "…"`, `--no-date`) |
 | `./cv-build --help` | Full command options |
 
 Each Markdown file can represent a different vacancy. E.g. `./cv-build rentman.md -o rentman.pdf`.

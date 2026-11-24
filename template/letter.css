@@ -1,0 +1,12 @@
+/* Cover letter: same Arial header as the ATS CV, then plain letter text. */
+@import url("single.css");
+
+@page { size: A4; margin: 14mm 20mm; }
+.letter {
+  font-size: 10.8pt;
+  line-height: 1.45;
+  margin-top: 16pt;
+}
+.letter p { margin: 0 0 9pt; orphans: 2; widows: 2; }
+.letter .date { color: var(--muted); margin-bottom: 14pt; }
+.contact span { white-space: nowrap; }

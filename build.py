@@ -9,6 +9,7 @@ Examples:
   ./cv-build cv.md --layout both       # ATS + designed two-column PDFs
   ./cv-build cv.md --layout two        # original two-column style
   ./cv-build cv.md --html              # also save the HTML preview
+  ./cv-build note.md --letter --header-from cv.md   # cover letter with the CV's header
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -233,19 +235,43 @@ def contact_list_html(meta: dict) -> str:
     return f'<ul class="contact">{"".join(items)}</ul>' if items else ""
 
 
-def document(meta: dict, css_file: str, body: str) -> str:
+def document(meta: dict, css_file: str, body: str, label: str = "CV") -> str:
     css_url = (TEMPLATE / css_file).resolve().as_uri()
     return ("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-            f"<title>{esc(meta['name'])} — CV</title><link rel=\"stylesheet\" href=\"{css_url}\">"
+            f"<title>{esc(meta['name'])} — {esc(label)}</title><link rel=\"stylesheet\" href=\"{css_url}\">"
             f"</head><body>{body}</body></html>")
+
+
+def header_html(meta: dict) -> str:
+    return (f'<header><h1 class="name">{esc(meta["name"])}</h1>'
+            + (f'<div class="title">{esc(meta["title"])}</div>' if meta.get("title") else "")
+            + contact_html(meta) + "</header>")
+
+
+def render_letter(meta: dict, body: str, when: str) -> str:
+    """Cover letter: the ATS header, an optional date line, then the letter text."""
+    dated = f'<p class="date">{esc(when)}</p>' if when else ""
+    return document(meta, "letter.css",
+                    header_html(meta) + f'<main class="letter">{dated}{md(body)}</main>', "Cover letter")
+
+
+def parse_letter(path: Path, header_from: str | None) -> tuple[dict, str]:
+    """Letter text, with name/contact from its own '# Name' header or from a CV file."""
+    meta, raw = split_front_matter(path.read_text(encoding="utf-8"))
+    body, extra = parse_plain_header(raw, meta)
+    body = (extra + "\n\n" + body).strip()
+    if header_from:
+        cv_meta = parse(Path(header_from).expanduser().resolve())[0]
+        meta = {**cv_meta, **meta}
+    if not meta.get("name"):
+        raise ValueError("Letter has no name. Add a '# Your Name' header or use --header-from cv.md.")
+    return meta, body
 
 
 def render_single(meta: dict, side_intro: str, main_intro: str, sections: list[dict]) -> str:
     # ATS: header first, then one linear content stream, no tables, columns, or photo.
-    header = (f'<header><h1 class="name">{esc(meta["name"])}</h1>'
-              + (f'<div class="title">{esc(meta["title"])}</div>' if meta.get("title") else "")
-              + contact_html(meta) + "</header>")
+    header = header_html(meta)
     ordered = sorted(sections, key=priority)
     profile_exists = any(PROFILE_RE.fullmatch(s["title"]) for s in sections)
     intro = (f'<section class="cv-section profile"><h2>Profile</h2>{md(main_intro)}</section>'
@@ -378,10 +404,16 @@ def main() -> int:
     parser.add_argument("--engine", choices=("auto", "chrome", "weasyprint"), default="auto",
                         help="PDF renderer: auto (Chrome, then optional WeasyPrint), chrome, weasyprint")
     parser.add_argument("--timeout", type=int, default=35, help="Chrome launch/render timeout in seconds")
+    parser.add_argument("--letter", action="store_true", help="Build a one-column cover letter PDF")
+    parser.add_argument("--header-from", help="Letter only: take name and contact header from this CV file")
+    parser.add_argument("--date", help="Letter only: date line (default: today, e.g. 24 November 2026)")
+    parser.add_argument("--no-date", action="store_true", help="Letter only: no date line")
     args = parser.parse_args()
     source = Path(args.src).expanduser().resolve()
     if not source.is_file():
         parser.error(f"Source Markdown file not found: {source}")
+    if args.letter:
+        return build_letter(args, source)
     try:
         meta, side_intro, main_intro, sections = parse(source)
         layout = args.layout or meta.get("layout", "single")
@@ -414,6 +446,38 @@ def main() -> int:
             if not args.html:
                 output_html.unlink(missing_ok=True)
             print(f"PDF ({'ATS / single column' if which == 'single' else 'designed / two column'}, {pdf_engine}): {target}")
+        return 0
+    except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+
+def build_letter(args: argparse.Namespace, source: Path) -> int:
+    try:
+        meta, body = parse_letter(source, args.header_from)
+        today = date.today()
+        when = "" if args.no_date else (args.date or f"{today.day} {today:%B %Y}")
+        target = (Path(args.out).expanduser().resolve() if args.out
+                  else source.with_suffix(".pdf"))
+        build = source.parent / ".cv-build"
+        build.mkdir(exist_ok=True)
+        output_html = (target.with_suffix(".html") if args.html or args.html_only
+                       else build / f"{source.stem}-letter.html")
+        output_html.write_text(render_letter(meta, body, when), encoding="utf-8")
+        if args.html_only:
+            print(f"HTML: {output_html}")
+            return 0
+        chrome = None
+        if args.engine in ("auto", "chrome"):
+            try:
+                chrome = detect_chrome(args.chrome)
+            except RuntimeError:
+                if args.engine == "chrome":
+                    raise
+        pdf_engine = make_pdf(output_html, target, chrome, args.engine, args.timeout)
+        if not args.html:
+            output_html.unlink(missing_ok=True)
+        print(f"PDF (cover letter, {pdf_engine}): {target}")
         return 0
     except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
