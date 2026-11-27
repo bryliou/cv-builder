@@ -5,7 +5,7 @@ A small local app that converts your editable Markdown CV into **searchable PDFs
 ## Quick start (macOS)
 
 1. Unzip the folder somewhere permanent, e.g. `~/Documents/cv-builder`.
-2. Put your CV content in `cv.md` (the included file is your current Profitap version).
+2. Put your CV content in `cv.md`.
 3. Install **Python 3** and **Google Chrome** if they are not installed already.
 4. In Terminal, enter the folder and run:
 
@@ -25,14 +25,14 @@ A small local app that converts your editable Markdown CV into **searchable PDFs
 | `./cv-build cv.md` | `cv.pdf` — **ATS-friendly default**, single column |
 | `./cv-build cv.md --layout both` | `cv.pdf` (ATS) and `cv_designed.pdf` (two columns) |
 | `./cv-build cv.md --layout two` | Two-column `cv.pdf` |
-| `./cv-build cv.md -o profitap.pdf` | Single-column `profitap.pdf` |
+| `./cv-build cv.md -o company.pdf` | Single-column `company.pdf` |
 | `./cv-build cv.md --html` | PDF + HTML preview |
 | `./cv-build cv.md --html-only` | HTML preview without Chrome |
 | `./cv-build cv.md --engine weasyprint` | Use the optional WeasyPrint renderer |
 | `./cv-build note.md --letter --header-from cv.md` | `note.pdf` — cover letter with the CV's Arial header and today's date (`--date "…"`, `--no-date`) |
 | `./cv-build --help` | Full command options |
 
-Each Markdown file can represent a different vacancy. E.g. `./cv-build rentman.md -o rentman.pdf`.
+Each Markdown file can represent a different vacancy. E.g. `./cv-build company.md -o company.pdf`.
 
 ## Editing the look
 
